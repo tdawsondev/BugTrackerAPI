@@ -3,6 +3,7 @@ using BugTrackerAPI.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -48,6 +49,33 @@ namespace BugTrackerAPI.Controllers
 
                 table = (DataAccess.ExecuteQueryAndReturnTable(query, sqlParams));
                 return Ok(JsonConvert.SerializeObject(table));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("An error was encountered: " + ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [Route("GetProjectWithUsers/{id}")]
+        public IActionResult GetProjectsWithUsers(Guid id)
+        {
+            try
+            {
+                string query = " SELECT * FROM public.project WHERE id = @id";
+                DataTable table = new DataTable();
+
+                List<NpgsqlParameter> sqlParams = new List<NpgsqlParameter>();
+                sqlParams.Add(new NpgsqlParameter("@id", id));
+
+                table = (DataAccess.ExecuteQueryAndReturnTable(query, sqlParams));
+
+                JArray result = JArray.Parse(JsonConvert.SerializeObject(table));
+                JArray userResult = JArray.Parse(JsonConvert.SerializeObject(GetProjectUsersDT(id)));
+
+                result.Add(userResult);
+
+                return Ok(result.ToString());
             }
             catch (Exception ex)
             {
@@ -126,12 +154,7 @@ namespace BugTrackerAPI.Controllers
         {
             try
             {
-                string query = "SELECT * FROM public.get_project_users(@id);";
-                DataTable table = new DataTable();
-                List<NpgsqlParameter> sqlParams = new List<NpgsqlParameter>();
-                sqlParams.Add(new NpgsqlParameter("@id", id));
-
-                table = (DataAccess.ExecuteQueryAndReturnTable(query, sqlParams));
+                DataTable table = GetProjectUsersDT(id);
                 return Ok(JsonConvert.SerializeObject(table));
             }
             catch (Exception ex)
@@ -139,7 +162,6 @@ namespace BugTrackerAPI.Controllers
                 return BadRequest("An error was encountered: " + ex.Message);
             }
         }
-
         [HttpPost]
         [Route("AddUserToProject")]
         public IActionResult AddUserToProject(ProjectUsers pu)
@@ -204,7 +226,16 @@ namespace BugTrackerAPI.Controllers
             }
         }
 
+        private DataTable GetProjectUsersDT(Guid id)
+        {
+            string query = "SELECT * FROM public.get_project_users(@id);";
+            DataTable table = new DataTable();
+            List<NpgsqlParameter> sqlParams = new List<NpgsqlParameter>();
+            sqlParams.Add(new NpgsqlParameter("@id", id));
 
+            table = (DataAccess.ExecuteQueryAndReturnTable(query, sqlParams));
+            return table;
+        }
 
     }
 }

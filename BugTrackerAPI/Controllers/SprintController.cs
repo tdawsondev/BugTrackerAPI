@@ -39,6 +39,28 @@ namespace BugTrackerAPI.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("GetWithProjectData/{id}")]
+        public IActionResult GetWithProjectData(Guid id)
+        {
+            try
+            {
+                string query = "SELECT sprint.id, sprint.name, sprint.description, sprint.status, sprint.project_id, sprint.start_date, sprint.end_date, project.name AS project_name, project.description AS project_description" +
+                    " FROM public.sprint INNER JOIN public.project ON public.sprint.project_id = public.project.id WHERE public.sprint.id = @id";
+                DataTable table = new DataTable();
+
+                List<NpgsqlParameter> sqlParams = new List<NpgsqlParameter>();
+                sqlParams.Add(new NpgsqlParameter("@id", id));
+
+                table = (DataAccess.ExecuteQueryAndReturnTable(query, sqlParams));
+                return Ok(JsonConvert.SerializeObject(table));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("An error was encountered: " + ex.Message);
+            }
+        }
+
         [HttpPost]
         public IActionResult Create(Sprint sprint)
         {
@@ -165,7 +187,7 @@ namespace BugTrackerAPI.Controllers
         {
             try
             {
-                string query = "SELECT id, name, status FROM public.feature WHERE sprint_id = @id";
+                string query = "SELECT * FROM public.feature WHERE sprint_id = @id";
                 DataTable table = new DataTable();
 
                 List<NpgsqlParameter> sqlParams = new List<NpgsqlParameter>();
@@ -185,7 +207,7 @@ namespace BugTrackerAPI.Controllers
         {
             try
             {
-                string query = "SELECT id, name, status FROM public.task WHERE parent_featureid = @id";
+                string query = "SELECT public.task.*, public.login.user_name FROM public.task INNER JOIN public.login ON public.task.assigned_userid = public.login.id WHERE parent_featureid = @id";
                 DataTable table = new DataTable();
 
                 List<NpgsqlParameter> sqlParams = new List<NpgsqlParameter>();
@@ -206,7 +228,7 @@ namespace BugTrackerAPI.Controllers
         {
             try
             {
-                string query = "SELECT id, name, status FROM public.subtask WHERE parent_taskid = @id";
+                string query = "SELECT public.subtask.*, public.login.user_name FROM public.subtask INNER JOIN public.login ON public.subtask.assigned_userid = public.login.id WHERE parent_taskid = @id";
                 DataTable table = new DataTable();
 
                 List<NpgsqlParameter> sqlParams = new List<NpgsqlParameter>();

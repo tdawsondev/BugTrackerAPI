@@ -124,5 +124,28 @@ namespace BugTrackerAPI.Controllers
                 return BadRequest("An error was encountered: " + ex.Message);
             }
         }
+        [HttpGet]
+        [Route("GetParents/{id}")]
+        public IActionResult GetParents(Guid id) /// not finished
+        {
+            try
+            {
+                string query = " SELECT * FROM public.task WHERE parent_featureid = @id";
+                DataTable table = new DataTable();
+
+                List<NpgsqlParameter> sqlParams = new List<NpgsqlParameter>();
+                sqlParams.Add(new NpgsqlParameter("@id", id));
+
+                table = (DataAccess.ExecuteQueryAndReturnTable(query, sqlParams));
+                return Ok(JsonConvert.SerializeObject(table));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("An error was encountered: " + ex.Message);
+            }
+
+        }
+
+
     }
 }

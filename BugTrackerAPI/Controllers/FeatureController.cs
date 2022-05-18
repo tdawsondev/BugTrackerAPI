@@ -18,7 +18,7 @@ namespace BugTrackerAPI.Controllers
     {
 
         [HttpGet]
-        [Route("Get")]
+        [Route("Get/{id}")]
         public IActionResult Get(Guid id)
         {
             try
@@ -125,12 +125,15 @@ namespace BugTrackerAPI.Controllers
             }
         }
         [HttpGet]
-        [Route("GetParents/{id}")]
-        public IActionResult GetParents(Guid id) /// not finished
+        [Route("GetWithParents/{id}")]
+        public IActionResult GetWithParents(Guid id) /// not finished
         {
             try
             {
-                string query = " SELECT * FROM public.task WHERE parent_featureid = @id";
+                string query = @"SELECT feature.* , sprint.name as sprint_name, project.id as projectid, project.name as project_name
+                                        FROM ((feature INNER JOIN sprint ON feature.sprint_id = sprint.id)
+	                                         INNER JOIN project on project.id = sprint.project_id)
+	                                         WHERE feature.id = @id";
                 DataTable table = new DataTable();
 
                 List<NpgsqlParameter> sqlParams = new List<NpgsqlParameter>();

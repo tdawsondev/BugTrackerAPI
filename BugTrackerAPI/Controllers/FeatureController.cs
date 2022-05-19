@@ -149,6 +149,32 @@ namespace BugTrackerAPI.Controllers
 
         }
 
+        [HttpGet]
+        [Route("GetNavToFeature/{id}")]
+        public IActionResult GetNavToFeature(Guid id) /// not finished
+        {
+            try
+            {
+                string query = @"SELECT feature.name as feature_name, feature.id as feature_id, 
+                                feature.sprint_id , sprint.name as sprint_name, project.id as project_id, project.name as project_name
+                                FROM ((feature INNER JOIN sprint ON feature.sprint_id = sprint.id)
+	                            INNER JOIN project on project.id = sprint.project_id)
+	                            WHERE feature.id = @id";
+                DataTable table = new DataTable();
+
+                List<NpgsqlParameter> sqlParams = new List<NpgsqlParameter>();
+                sqlParams.Add(new NpgsqlParameter("@id", id));
+
+                table = (DataAccess.ExecuteQueryAndReturnTable(query, sqlParams));
+                return Ok(JsonConvert.SerializeObject(table));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("An error was encountered: " + ex.Message);
+            }
+
+        }
+
 
     }
 }

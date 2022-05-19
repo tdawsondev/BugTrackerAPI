@@ -204,6 +204,27 @@ namespace BugTrackerAPI.Controllers
             }
 
         }
+        [HttpGet]
+        [Route("GetNavToProject/{id}")]
+        public IActionResult GetNavToProject(Guid id) /// not finished
+        {
+            try
+            {
+                string query = @"SELECT project.id as project_id, project.name as project_name FROM project WHERE project.id = @id";
+                DataTable table = new DataTable();
+
+                List<NpgsqlParameter> sqlParams = new List<NpgsqlParameter>();
+                sqlParams.Add(new NpgsqlParameter("@id", id));
+
+                table = (DataAccess.ExecuteQueryAndReturnTable(query, sqlParams));
+                return Ok(JsonConvert.SerializeObject(table));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("An error was encountered: " + ex.Message);
+            }
+
+        }
 
         [HttpGet]
         [Route("GetSprints/{id}")]

@@ -154,6 +154,30 @@ namespace BugTrackerAPI.Controllers
         }
 
         [HttpGet]
+        [Route("GetNavToSprint/{id}")]
+        public IActionResult GetNavToSprint(Guid id) /// not finished
+        {
+            try
+            {
+                string query = @"SELECT sprint.id as sprint_id, sprint.name as sprint_name, project.id as project_id, project.name as project_name
+                                        FROM sprint  INNER JOIN project on project.id = sprint.project_id
+	                                         WHERE sprint.id = @id";
+                DataTable table = new DataTable();
+
+                List<NpgsqlParameter> sqlParams = new List<NpgsqlParameter>();
+                sqlParams.Add(new NpgsqlParameter("@id", id));
+
+                table = (DataAccess.ExecuteQueryAndReturnTable(query, sqlParams));
+                return Ok(JsonConvert.SerializeObject(table));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("An error was encountered: " + ex.Message);
+            }
+
+        }
+
+        [HttpGet]
         [Route("GetSprintTree/{id}")]
         public IActionResult GetTreeforSprint(Guid id)
         {
